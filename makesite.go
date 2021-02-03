@@ -9,17 +9,21 @@ import (
 	"strings"
 )
 
+type HTMLPage struct {
+	Title   string
+	Content string
+}
+
 // Update the `save` function to use the input filename to generate a new HTML file.
 func save(textFilePtr *string) {
 	textFile, err := ioutil.ReadFile(*textFilePtr)
 	textFileName := strings.Split(*textFilePtr, ".")[0]
-	textToHTML, err := os.Create(fmt.Sprintf("%s.html", textFileName))
-	if err != nil {
-		panic(err)
-	}
+	htmlFile, err := os.Create(fmt.Sprintf("%s.html", textFileName))
+
+	textToHTML := HTMLPage{textFileName, string(textFile)}
 
 	t := template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
-	err = t.Execute(textToHTML, textFile)
+	err = t.Execute(htmlFile, textToHTML)
 	if err != nil {
 		panic(err)
 	}
