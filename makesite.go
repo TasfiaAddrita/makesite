@@ -1,54 +1,52 @@
 package main
 
 import (
-	// "fmt"
+	"flag"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
-type entry struct {
-	Name string
-	Done bool
-}
+// Update the `save` function to use the input filename to generate a new HTML file.
+func save(textFilePtr *string) {
+	textFile, err := ioutil.ReadFile(*textFilePtr)
+	textFileName := strings.Split(*textFilePtr, ".")[0]
+	textToHTML, err := os.Create(fmt.Sprintf("%s.html", textFileName))
+	if err != nil {
+		panic(err)
+	}
 
-type ToDo struct {
-	User string
-	List []entry
+	t := template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
+	err = t.Execute(textToHTML, textFile)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
-	// READING A FILE
-	// fileContents, err := ioutil.ReadFile("first-post.txt")
-	// if err != nil {
-	// 	// A common use of `panic` is to abort if a function returns an error
-	// 	// value that we don’t know how to (or want to) handle. This example
-	// 	// panics if we get an unexpected error when creating a new file.
-	// 	panic(err)
-	// }
-	// fmt.Print(string(fileContents))
-
-	// WRITING A FILE
-	// bytesToWrite := []byte("hello\ngo\n")
-	// err := ioutil.WriteFile("new-file.txt", bytesToWrite, 0644)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	// Read in the contents of the provided `first-post.txt` file.
-	fileContents, err := ioutil.ReadFile("first-post.txt")
+	// firstPostTxt, err := ioutil.ReadFile("first-post.txt")
 
 	// Render the contents of `first-post.txt` using Go Templates and print it to stdout.
-	t := template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
-	err = t.Execute(os.Stdout, string(fileContents))
-	if err != nil {
-		panic(err)
-	}
+	// t := template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
+	// err = t.Execute(os.Stdout, string(firstPostTxt))
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	// Write the HTML template to the filesystem to a file. Name it `first-post.html`.
-	myFile, err := os.Create("first-post.html")
-	err = t.Execute(myFile, string(fileContents))
-	if err != nil {
-		panic(err)
-	}
+	// myFile, err := os.Create("first-post.html")
+	// err = t.Execute(myFile, string(firstPostTxt))
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// Add a new flag to your command named `file`. This flag represents the name of
+	// any `.txt` file in the same directory as your program.
+	textFilePtr := flag.String("file", "", "Text file to render to HTML.")
+	flag.Parse()
+	save(textFilePtr)
+
 }
