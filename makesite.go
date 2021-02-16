@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -14,10 +15,10 @@ type HTMLPage struct {
 	Content string
 }
 
-// Update the `save` function to use the input filename to generate a new HTML file.
-func save(textFilePtr *string) {
-	textFile, err := ioutil.ReadFile(*textFilePtr)
-	textFileName := strings.Split(*textFilePtr, ".")[0]
+// Create a function to use the input filename to generate a new HTML file.
+func createPageFromTextFile(textFilePath string) {
+	textFile, err := ioutil.ReadFile(textFilePath)
+	textFileName := strings.Split(textFilePath, ".")[0]
 	htmlFile, err := os.Create(fmt.Sprintf("%s.html", textFileName))
 
 	textToHTML := HTMLPage{textFileName, string(textFile)}
@@ -29,28 +30,47 @@ func save(textFilePtr *string) {
 	}
 }
 
+func test() {
+	fmt.Print("I am test")
+}
+
+func findAllFilesInDirectory(directory string) []string {
+	var textFiles []string
+
+	files, err := ioutil.ReadDir(directory)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		fileName := strings.Split(file.Name(), ".")
+		if len(fileName) > 1 && fileName[1] == "txt" {
+			// fmt.Println(fileName)
+			textFiles = append(textFiles, file.Name())
+		}
+	}
+	return textFiles
+}
+
 func main() {
-	// Read in the contents of the provided `first-post.txt` file.
-	// firstPostTxt, err := ioutil.ReadFile("first-post.txt")
 
-	// Render the contents of `first-post.txt` using Go Templates and print it to stdout.
-	// t := template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
-	// err = t.Execute(os.Stdout, string(firstPostTxt))
-	// if err != nil {
-	// 	panic(err)
-	// }
+	var textFilePath string
+	var directory string
 
-	// Write the HTML template to the filesystem to a file. Name it `first-post.html`.
-	// myFile, err := os.Create("first-post.html")
-	// err = t.Execute(myFile, string(firstPostTxt))
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// Add a new flag to your command named `file`. This flag represents the name of
-	// any `.txt` file in the same directory as your program.
-	textFilePtr := flag.String("file", "", "Text file to render to HTML.")
+	flag.StringVar(&textFilePath, "file", "", "Render text file to HTML.")
+	flag.StringVar(&directory, "dir", "", "Find all .txt files in the given directory.")
 	flag.Parse()
-	save(textFilePtr)
+
+	if textFilePath != "" {
+		createPageFromTextFile(textFilePath)
+		// test()
+	}
+
+	if directory != "" {
+		textFiles := findAllFilesInDirectory(directory)
+		for _, fileName := range textFiles {
+			createPageFromTextFile(fileName)
+		}
+	}
 
 }
