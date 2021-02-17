@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"html/template"
@@ -8,6 +9,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	wkhtmltopdf "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
 
 type HTMLPage struct {
@@ -30,8 +33,33 @@ func createPageFromTextFile(textFilePath string) {
 	}
 }
 
-func test() {
-	fmt.Print("I am test")
+func createPDFfromTextFile(textFilePath string) {
+	// fmt.Println(wkhtmltopdf.GetPath())
+	// wkhtmltopdf.SetPath("./")
+	// fmt.Println(wkhtmltopdf.GetPath())
+	pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(textFilePath)
+	htmlfile, err := ioutil.ReadFile(textFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pdfg.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader(htmlfile)))
+	pdfg.Dpi.Set(600)
+
+	// Create PDF document in internal buffer
+	err = pdfg.Create()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write buffer contents to file on disk
+	err = pdfg.WriteFile("simplesample.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func findAllFilesInDirectory(directory string) []string {
@@ -54,16 +82,23 @@ func findAllFilesInDirectory(directory string) []string {
 
 func main() {
 
-	var textFilePath string
+	var textFilePathHTML string
+	var textFilePathPDF string
 	var directory string
 
-	flag.StringVar(&textFilePath, "file", "", "Render text file to HTML.")
+	flag.StringVar(&textFilePathHTML, "file", "", "Render text file to HTML.")
+	flag.StringVar(&textFilePathPDF, "pdf", "", "Render HTML file to PDF.")
 	flag.StringVar(&directory, "dir", "", "Find all .txt files in the given directory.")
 	flag.Parse()
 
-	if textFilePath != "" {
-		createPageFromTextFile(textFilePath)
+	if textFilePathHTML != "" {
+		createPageFromTextFile(textFilePathHTML)
 		// test()
+	}
+
+	if textFilePathPDF != "" {
+		// fmt.Println(textFilePathPDF)
+		createPDFfromTextFile(textFilePathPDF)
 	}
 
 	if directory != "" {
@@ -72,5 +107,11 @@ func main() {
 			createPageFromTextFile(fileName)
 		}
 	}
+
+	// flag.Visit(func(f *flag.Flag) {
+	// 	if f.Name == "pdf" {
+	// 		fmt.Print("I PASS")
+	// 	}
+	// })
 
 }
